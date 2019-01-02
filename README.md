@@ -6,8 +6,21 @@ When executing this script it will download doctl and use it to create a cluster
 log in into your Digital Ocean account and create a write enabled token that you will provide to doctl
 
 ## Usage
+
+### Installing all
+```
+$ ./install.sh
+```
+
+### Installing the cluster on Digital Ocean
 ```
 $ ./create_cluster.sh
 ```
 
 And follow the instructions, at the end you will get a kubectl config file on the same directory as this script
+
+### Installing Traefik
+
+```
+$ ./install_traefik.sh
+```
