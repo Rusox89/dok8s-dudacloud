@@ -1,26 +1,15 @@
 #!/bin/bash
-set -exE
-DOCTL_VER=1.12.2
+set -e
+source ./utils/functions.sh
+
+ensure_installed doctl
+
 DIGITALOCEAN_ENABLE_BETA=1
-
-function download_doctl {
-    # If not already downloaded, dowload and untar
-    if [ ! -f doctl-$1-linux-amd64.tar.gz ]; then
-        curl -OL https://github.com/digitalocean/doctl/releases/download/v$1/doctl-$1-linux-amd64.tar.gz
-    fi
-}
-
-function unpack_doctl {
-    # If not already unpacked, unpack
-    if [ ! -f doctl ]; then
-        tar -xzvf doctl-$1-linux-amd64.tar.gz
-    fi
-}
 
 function initialize_doctl {
     # Initialize doctl if not already initialized
-    if [ ! ~/.config/doctl/config.yaml ]; then
-        ./doctl auth init
+    if [ ! -f ~/.config/doctl/config.yaml ]; then
+        doctl auth init
     fi
 }
 
@@ -55,12 +44,10 @@ function choose {
 }
 
 function main {
-    download_doctl $1
-    unpack_doctl $1
     initialize_doctl
-    REGIONS=$(./doctl kubernetes options regions)
-    VERSIONS=$(./doctl kubernetes options versions)
-    SIZES=$(./doctl kubernetes options sizes)
+    REGIONS=$(doctl kubernetes options regions)
+    VERSIONS=$(doctl kubernetes options versions)
+    SIZES=$(doctl kubernetes options sizes)
 
     REGION=$(decide "Choose a region " "$REGIONS")
     VERSION=$(decide "Choose a version " "$VERSIONS")
@@ -109,22 +96,10 @@ function main {
     done;
 
     
-    ./doctl kubernetes cluster create $NAME --wait ${ARGS_ARR[*]}
-    ./doctl kubernetes cluster kubeconfig show $NAME > $NAME-kubeconfig.yaml
-
-    while :
-    do
-        echo "Do you want to install the config file? (y/n)"
-        read ANSWER
-        if [[ -z ${ANSWER//[y]/} ]]; then
-            cp -f ./$NAME-kubeconfig.yaml ~/.kube/config
-            break;
-        fi
-        if [[ -z ${ANSWER//[n]/} ]]; then
-            break;
-        fi
-        echo "Invalid option use 'y' or 'n'"
-    done
+    doctl kubernetes cluster create $NAME --wait ${ARGS_ARR[*]}
+    doctl kubernetes cluster kubeconfig show $NAME > $NAME-kubeconfig.yaml
+    mkdir -p ~/.kube
+    cp -f ./$NAME-kubeconfig.yaml ~/.kube/config
 }
 
 main $DOCTL_VER
